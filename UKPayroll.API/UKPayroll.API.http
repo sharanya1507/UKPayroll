@@ -1,0 +1,6 @@
+@UKPayroll.API_HostAddress = http://localhost:5245
+
+GET {{UKPayroll.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

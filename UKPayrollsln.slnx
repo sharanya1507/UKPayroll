@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="UKPayroll.API/UKPayroll.API.csproj" />
+  <Project Path="UKPayroll.DataLayer/UKPayroll.DataLayer.csproj" />
+  <Project Path="UKPayroll.Shared/UKPayroll.Shared.csproj" />
+</Solution>
