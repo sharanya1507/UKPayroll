@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using UKPayroll.DataLayer;
 using UKPayroll.DataLayer.Interfaces;
-using UKPayroll.DataLayer.Services;
+using UKPayroll.DataLayer.Repo;
 
 namespace UKPayroll.API
 {
@@ -9,9 +9,9 @@ namespace UKPayroll.API
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            var builder = WebApplication.CreateBuilder(args);   //Creates the WebApplicationBuilder factory class
 
-            // Add services to the container.
+                        // Add services to the container.
 
             builder.Services.AddControllers();
 
@@ -26,16 +26,16 @@ namespace UKPayroll.API
 
             builder.Services.AddScoped<IEmployeeRepo, EmployeeRepo>();
 
-            var app = builder.Build();
+            var app = builder.Build();  // builds the webApplication object from the builder and returns it to the app variable
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
 
-                app.MapOpenApi();
+           
 
-                app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwagger();  //Swagger documentation
+                app.UseSwaggerUI();  //Swagger browser interface
             }
 
             app.UseHttpsRedirection();

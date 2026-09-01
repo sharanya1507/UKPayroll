@@ -1,100 +1,212 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using UKPayroll.DataLayer.Interfaces;
 using UKPayroll.DataLayer.Models;
+using UKPayroll.Shared.DTO;
 
-namespace UKPayroll.DataLayer.Services
+namespace UKPayroll.DataLayer.Repo;
+
+public class EmployeeRepo : IEmployeeRepo
 {
-    public class EmployeeRepo : IEmployeeRepo
+    private readonly AppDbContext _context;
+
+    public EmployeeRepo(AppDbContext context)
     {
-        private readonly AppDbContext _context;
+        _context = context;
+    }
 
-        public EmployeeRepo(AppDbContext context)
+    public async Task<List<EmployeesInfo>> GetEmployeesAsync()  //This method can perform asynchronous work using await.
+    {
+        return await _context.EmployeesInfos.ToListAsync();
+    }
+
+    public async Task<EmployeesInfo?> GetEmployeeAsync(int id)
+    {
+        return await _context.EmployeesInfos.FindAsync(id);
+    }
+
+    public async Task<EmployeesInfo> AddEmployeeAsync(EmployeesInfo employee)
+    {
+        _context.EmployeesInfos.Add(employee);
+
+        await _context.SaveChangesAsync();
+
+        return employee;
+    }
+
+    public async Task<EmployeesInfo?> UpdateEmployeeAsync(int id, EmployeesInfo employee)
+    {
+        var existingEmployee = await _context.EmployeesInfos.FindAsync(id);
+
+        if (existingEmployee == null)
         {
-            _context = context;
+            return null;
         }
 
-        public async Task<List<EmployeesInfo>> GetEmployeesAsync()
+        _context.Entry(existingEmployee).CurrentValues.SetValues(employee);
+
+        await _context.SaveChangesAsync();
+
+        return existingEmployee;
+    }
+
+    public async Task<bool> DeleteEmployeeAsync(int id)
+    {
+        var employee = await _context.EmployeesInfos.FindAsync(id);
+
+        if (employee == null)
         {
-            return await _context.EmployeesInfos.ToListAsync();
+            return false;
         }
 
-        public async Task<EmployeesInfo?> GetEmployeeAsync(int id)
-        {
-            return await _context.EmployeesInfos.FindAsync(id);
-        }
+        _context.EmployeesInfos.Remove(employee);
 
-        public async Task<EmployeesInfo> AddEmployeeAsync(EmployeesInfo employee)
-        {
-            _context.EmployeesInfos.Add(employee);
+        await _context.SaveChangesAsync();
 
-            await _context.SaveChangesAsync();
+        return true;
+    }
 
-            return employee;
-        }
+   
 
-        public async Task<EmployeesInfo?> UpdateEmployeeAsync(int id, EmployeesInfo employee)
-        {
-            var existingEmployee = await _context.EmployeesInfos.FindAsync(id);
+    public async Task<List<EmployeesInfo>> GetEmployeeByJobRoleAsync(string jobRole)
+    {
+        return await _context.EmployeesInfos
+           .Where(e => e.JobRole == jobRole)
+           .ToListAsync();
+    }
 
-            if (existingEmployee == null)
+    public async Task<List<EmployeesInfo>> GetEmployeesSortedAsync()
+    {
+        return await _context.EmployeesInfos
+           .OrderBy(e => e.BasicSalary)
+           .ThenBy(e => e.Name)
+           .ToListAsync();
+    }
+
+    public async Task<List<EmployeesInfo>> GetEmployeesWithDepartmentAsync()
+    {
+        return await _context.EmployeesInfos
+            .Include(e => e.Department)
+            .ToListAsync();
+    }
+
+    public async Task<List<EmployeeDepartmentDto>> GetEmployeesDepWithDepartmentAsync()
+    {
+        return await _context.EmployeesInfos
+            .Include(e => e.Department)
+            .Where (e => e.Department!.DepartmentName =="HR" || e.Department.DepartmentName =="Finance")
+            .Select(e => new EmployeeDepartmentDto  //imp
             {
-                return null;
-            }
+                Name = e.Name,
+                JobRole = e.JobRole,
+                BasicSalary = e.BasicSalary,
+                DepartmentName = e.Department!.DepartmentName 
+            })
+            .ToListAsync();
+    }
 
-            _context.Entry(existingEmployee).CurrentValues.SetValues(employee);
 
-            await _context.SaveChangesAsync();
+    public async Task<EmployeeDepartmentDto> AddEmployeeWithDepartmentAsync( EmployeeCreateDto employee)
+    {
+        var department = await _context.Departments.FindAsync(employee.DepartmentId);
 
-            return existingEmployee;
-        }
+        if (department == null)
+            return null;
 
-        public async Task<bool> DeleteEmployeeAsync(int id)
+        var newEmployee = new EmployeesInfo
         {
-            var employee = await _context.EmployeesInfos.FindAsync(id);
+            Name = employee.Name,
+            JobRole = employee.JobRole,
+            BasicSalary = employee.BasicSalary,
+            DepartmentId = employee.DepartmentId
+        };
 
-            if (employee == null)
-            {
-                return false;
-            }
+        _context.EmployeesInfos.Add(newEmployee);
 
-            _context.EmployeesInfos.Remove(employee);
+        await _context.SaveChangesAsync();
 
-            await _context.SaveChangesAsync();
-
-            return true;
-        }
-
-       
-
-        public async Task<List<EmployeesInfo>> GetEmployeeByJobRoleAsync(string jobRole)
+        return new EmployeeDepartmentDto
         {
-            return await _context.EmployeesInfos
-               .Where(e => e.JobRole == jobRole)
-               .ToListAsync();
-        }
+            Id = newEmployee.Id,
+            Name = newEmployee.Name,
+            JobRole = newEmployee.JobRole,
+            BasicSalary = newEmployee.BasicSalary,
+            DepartmentId = department.DepartmentId,
+            DepartmentName = department.DepartmentName
+        };
+    }
 
-        public async Task<List<EmployeesInfo>> GetEmployeesSortedAsync()
+
+    public async Task<EmployeeDepartmentDto> UpdateEmployeeWithDepartmentAsync(
+    int id,
+    EmployeeUpdateDto employee)
+    {
+        var existingEmployee = await _context.EmployeesInfos.FindAsync(id);
+
+        if (existingEmployee == null)
+            return null;
+
+        var department = await _context.Departments.FindAsync(employee.DepartmentId);
+
+        if (department == null)
+            return null;
+
+        existingEmployee.Name = employee.Name;
+        existingEmployee.JobRole = employee.JobRole;
+        existingEmployee.BasicSalary = employee.BasicSalary;
+        existingEmployee.DepartmentId = employee.DepartmentId;
+
+        await _context.SaveChangesAsync();
+
+        return new EmployeeDepartmentDto
         {
-            return await _context.EmployeesInfos
-               .OrderBy(e => e.BasicSalary)
-               .ThenBy(e => e.Name)
-               .ToListAsync();
-        }
+            Id = existingEmployee.Id,
+            Name = existingEmployee.Name,
+            JobRole = existingEmployee.JobRole,
+            BasicSalary = existingEmployee.BasicSalary,
+            DepartmentId = department.DepartmentId,
+            DepartmentName = department.DepartmentName
+        };
+    }
 
-       public async Task<object> GetEmployeesWithDepartmentAsync()
-{
-    return await _context.EmployeesInfos
-        .Include(e => e.Department)
-        .Select(e => new
+    public async Task<bool> DeleteEmployeewithDepartmentAsync(int id)
+    {
+        var employee = await _context.EmployeesInfos.FindAsync(id);
+
+        if (employee == null)
+            return false;
+
+        _context.EmployeesInfos.Remove(employee);
+
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+
+
+    public async Task<EmployeeDepartmentDto> PatchEmployeeDepartmentAsync( int id, int departmentId)
+    {
+        var employee = await _context.EmployeesInfos.FindAsync(id);
+
+        if (employee == null)
+            return null;
+
+        var department = await _context.Departments.FindAsync(departmentId);
+
+        if (department == null)
+            return null;
+
+        employee.DepartmentId = departmentId;
+
+        await _context.SaveChangesAsync();
+
+        return new EmployeeDepartmentDto
         {
-            
-            e.Name,
-            e.JobRole,
-            e.BasicSalary,
-            Department = e.Department!.DepartmentName
-        })
-        .ToListAsync();
-}
-
+            Id = employee.Id,
+            Name = employee.Name,
+            JobRole = employee.JobRole,
+            BasicSalary = employee.BasicSalary,
+            DepartmentId = department.DepartmentId,
+            DepartmentName = department.DepartmentName
+        };
     }
 }

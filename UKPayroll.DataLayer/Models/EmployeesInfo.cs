@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace UKPayroll.DataLayer.Models;
 
 public partial class EmployeesInfo
 {
+    [Key]
     public int Id { get; set; }
 
     public string Name { get; set; } = null!;
@@ -28,7 +30,7 @@ public partial class EmployeesInfo
     public decimal? GrossPay { get; set; }
 
     public decimal? NetPay { get; set; }
-
+    
     public int? DepartmentId { get; set; }
 
     public virtual Department? Department { get; set; }
