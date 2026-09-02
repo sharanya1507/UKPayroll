@@ -1,13 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using UKPayroll.DataLayer;
+using Microsoft.AspNetCore.Mvc;
 using UKPayroll.DataLayer.Interfaces;
 using UKPayroll.DataLayer.Models;
-using UKPayroll.Shared.DTO;
 
 namespace UKPayroll.API.Controllers
 {
-    [ApiController] 
+    [ApiController]
     [Route("api/[controller]")]
+    [Tags("Employee")]
     public class EmployeeController : ControllerBase
     {
         private readonly IEmployeeRepo _employeeRepo;
@@ -80,76 +79,12 @@ namespace UKPayroll.API.Controllers
             return Ok(employees);
         }
 
-
         [HttpGet("sorted")]
         public async Task<IActionResult> GetEmployeesSorted()
         {
             var employees = await _employeeRepo.GetEmployeesSortedAsync();
 
             return Ok(employees);
-        }
-
-        [HttpGet("with-department")]
-        public async Task<IActionResult> GetEmployeesWithDepartment()
-        {
-            var employees = await _employeeRepo.GetEmployeesWithDepartmentAsync();
-
-            return Ok(employees);
-        }
-
-        [HttpGet("employee-department")]
-        public async Task<IActionResult> GetEmployeesDepWithDepartment()
-        {
-            var employees = await _employeeRepo.GetEmployeesDepWithDepartmentAsync();
-
-            return Ok(employees);
-        }
-
-        [HttpPost("Relationship-Post")]
-        public async Task<IActionResult> AddEmployeeWithDepartment(EmployeeCreateDto employee)
-        {
-            var result = await _employeeRepo.AddEmployeeWithDepartmentAsync(employee);
-
-            if (result == null)
-                return BadRequest("Department does not exist.");
-
-            return Ok(result);
-        }
-
-
-        [HttpPut("with-department/{id}")]
-        public async Task<IActionResult> UpdateEmployeeWithDepartment(int id, EmployeeUpdateDto employee)
-        {
-            var result = await _employeeRepo.UpdateEmployeeWithDepartmentAsync(id, employee);
-
-            if (result == null)
-                return NotFound();
-
-            return Ok(result);
-        }
-
-        [HttpDelete("with-department/{id}")]
-        public async Task<IActionResult> DeleteEmployeeWithDepartment(int id)
-        {
-            var result = await _employeeRepo.DeleteEmployeewithDepartmentAsync(id);
-
-            if (!result)
-                return NotFound();
-
-            return Ok("Employee deleted successfully.");
-        }
-
-
-        [HttpPatch("{id}/department")]
-        public async Task<IActionResult> PatchEmployeeDepartment(int id, int departmentId)
-        {
-            var result = await _employeeRepo
-                .PatchEmployeeDepartmentAsync(id, departmentId);
-
-            if (result == null)
-                return NotFound();
-
-            return Ok(result);
         }
     }
 }

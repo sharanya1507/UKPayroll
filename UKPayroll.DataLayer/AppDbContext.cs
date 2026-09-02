@@ -20,6 +20,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<EmployeesInfo> EmployeesInfos { get; set; }
 
+    public virtual DbSet<Employment> Employments { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=Employees;Trusted_Connection=True;TrustServerCertificate=True;");
@@ -73,6 +75,20 @@ public partial class AppDbContext : DbContext
             entity.HasOne(d => d.Department).WithMany(p => p.EmployeesInfos)
                 .HasForeignKey(d => d.DepartmentId)
                 .HasConstraintName("FK_EmployeesInfo_Departments");
+        });
+
+        modelBuilder.Entity<Employment>(entity =>
+        {
+            entity.HasKey(e => e.EmploymentNo);
+
+            entity.ToTable("Employment");
+
+            entity.Property(e => e.EmploymentNo).HasDefaultValueSql("(newid())");
+
+            entity.HasOne(d => d.Employee).WithMany(p => p.Employments)
+                .HasForeignKey(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Employment_EmployeesInfo");
         });
 
         OnModelCreatingPartial(modelBuilder);
